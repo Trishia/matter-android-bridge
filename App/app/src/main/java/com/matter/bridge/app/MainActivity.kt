@@ -470,7 +470,41 @@ class MainActivity : AppCompatActivity() {
                   else -> null
               }
           }
-          
+          MatterConstants.RelativeHumidityMeasurement.CLUSTER_ID -> {
+              when (attributeId) {
+                  MatterConstants.RelativeHumidityMeasurement.Attributes.MEASURED_VALUE -> {
+                      if (device is BridgedDevice.HumiditySensor) {
+                          Timber.d("Read RelativeHumidity: ${device.humidity / 100.0}°C")
+                          // Encode as int16 (2 bytes, little-endian)
+                          val temp = device.humidity.toShort()
+                          byteArrayOf(
+                              (temp.toInt() and 0xFF).toByte(),
+                              ((temp.toInt() shr 8) and 0xFF).toByte()
+                          )
+                      } else null
+                  }
+                  MatterConstants.RelativeHumidityMeasurement.Attributes.MIN_MEASURED_VALUE -> {
+                      // Min: 0% = 0 (Percent)
+                      val min: Short = 0
+                      byteArrayOf(
+                          (min.toInt() and 0xFF).toByte(),
+                          ((min.toInt() shr 8) and 0xFF).toByte()
+                      )
+                  }
+                  MatterConstants.RelativeHumidityMeasurement.Attributes.MAX_MEASURED_VALUE -> {
+                      // Max: 100% = 10000 (Percent)
+                      val max: Short = 10000
+                      byteArrayOf(
+                          (max.toInt() and 0xFF).toByte(),
+                          ((max.toInt() shr 8) and 0xFF).toByte()
+                      )
+                  }
+                  MatterConstants.TemperatureMeasurement.Attributes.CLUSTER_REVISION -> {
+                      byteArrayOf(0x04, 0x00) // Revision 4
+                  }
+                  else -> null
+              }
+          }
           else -> {
               Timber.w("Unhandled cluster read: 0x${clusterId.toString(16)}")
               null
